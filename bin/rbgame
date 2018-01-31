@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'gosu'
+
+Dir.chdir "#{File.dirname __FILE__}/../components"
+
+$LOAD_PATH << "#{File.dirname __FILE__}/../lib/extras"
+
+require 'main_window'
+require 'sidebar'
+
+# Search for ruby files
+MainWindow.load_examples "*.rb"
+
+class WindowBox < Gosu::Window
+  def initialize
+    super Sidebar::WIDTH, Sidebar::HEIGHT, false
+    
+    @sidebar = Sidebar.new { |context| change_context(context) }
+    
+    welcome_class = MainWindow.examples.find { |context| context.name =~ /::Welcome$/ }
+    change_context(welcome_class)
+  end
+  
+  def update
+    self.caption = "Robot APP - #{@current_context.caption}"
+    
+    @current_context.update
+  end
+  
+  def draw
+    @current_context.draw
+    
+    Gosu.flush
+    
+    Gosu.translate(@current_context.width, 0) do
+      current_filename = @current_context.class.source_file
+      @sidebar.draw(current_filename)
+    end
+  end
+  
+  def button_down(id)
+    case id
+    when Gosu::KB_ESCAPE
+      close
+    else
+      if id == Gosu::MS_LEFT and mouse_x >= @current_context.width
+        @sidebar.click(mouse_x - @current_context.width, mouse_y)
+      else
+        @current_context.button_down(id)
+      end
+    end
+  end
+  
+  def button_up(id)
+    @current_context.button_up(id)
+  end
+  
+  def needs_cursor?
+    true
+  end
+  
+  private
+  
+  def change_context(context)
+    if @current_context.class != context
+      @current_context = nil
+      GC.start
+      @current_context = context.new
+      @current_context.parent_window = self
+      self.width = @current_context.width + Sidebar::WIDTH
+      self.height = @current_context.height
+    end
+  end
+  
+  def open_file_or_folder(filename)
+    if RUBY_PLATFORM =~ /darwin[0-9]*$/
+      `open '#{filename}'`
+    elsif RUBY_PLATFORM =~ /mingw[0-9]*$/
+      `explorer "#{filename.gsub('/', '\\')}"`
+    else
+      `xdg-open '#{filename}'`
+    end
+  end
+end
+
+WindowBox.new.show
