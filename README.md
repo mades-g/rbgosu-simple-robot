@@ -19,7 +19,8 @@ sudo gem install gosu
 To run this project go to (cd) bin then > ruby rbgame
 
 # TODO:
- - Move robot on command
+  Animate
+  Report on 'scale'
 
-# DOC >C
+# DOC 
 http://www.rubydoc.info/github/gosu/gosu/Gosu
