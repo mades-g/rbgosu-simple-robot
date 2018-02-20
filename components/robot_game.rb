@@ -108,7 +108,7 @@ class Player
       p_y = @y
       case command
         when 'MOVE'
-          move_rbt
+          move_rbt_on_command
           @msg = "Moviinnng"
         when 'LEFT'
           set_rbt_direction(:left)
@@ -124,6 +124,10 @@ class Player
         @falling.play
       end
     end
+  end
+
+  def is_allowed_to_move
+    return @rbot_allowed_to_move
   end
 
   # rotate 90 degrees acording to direction
@@ -146,7 +150,33 @@ class Player
     @y = HEIGHT - (HEIGHT - @map.height) # y = 0
   end
 
-  def move_rbt
+  def move_rbt_up
+    @y -= 1
+  end
+
+  def move_rbt_down
+    @y += 1
+  end
+
+  def move_rbt_left
+    if is_allowed_to_move
+      if @dir == :right
+        set_rbt_direction(:left)
+      end
+        @x -= 1
+    end
+  end
+
+  def move_rbt_right
+    if is_allowed_to_move
+      if @dir == :left
+        set_rbt_direction(:right)
+      end
+      @x += 1
+    end
+  end
+
+  def move_rbt_on_command
     # validate if can move
     # Should move until reach fall
     # Example while not is falling to doom increment step
@@ -233,6 +263,18 @@ class RobotGame < (MainWindow rescue Gosu::Window)
   def update
     # depending on commands move
     # @rbot.update(move_x)
+    if Gosu.button_down? Gosu::KB_LEFT
+      @rbot.move_rbt_left
+    end
+    if Gosu.button_down? Gosu::KB_RIGHT
+      @rbot.move_rbt_right
+    end
+    if Gosu.button_down? Gosu::KB_UP
+      @rbot.move_rbt_up
+    end
+    if Gosu.button_down? Gosu::KB_DOWN
+      @rbot.move_rbt_down
+    end
   end
 end
 
